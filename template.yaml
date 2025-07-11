@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  music-app
+  Sample SAM Template for music-app
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 30
+    LoggingConfig:
+      LogFormat: JSON
+Resources:
+  GetMovies:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: get_movies/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+      Events:
+        createmovie:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /test
+            Method: get
+  CreateMovies:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: create_movie/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+      Events:
+        createmovie:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /test
+            Method: POST
+  
+  DynamodbTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey: 
+        Name: uuid
+        Type: String
+      TableName: "movie_table"
+      Tags:
+        Project: test
+        app: Serverless
+
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Description: 'This is the test api gateway for the SAM'
+      Name: 'testserverlessApi'
+      StageName: test
+      Tags: 
+        project: test
+        app: app
+
+Outputs:
+  createMovieApi:
+    Description: API Gateway endpoint URL for createMovieApi
+      function
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/test/"
+  createMovie:
+    Description: createMovie Lambda Function ARN
+    Value: !GetAtt CreateMovies.Arn
+  createMovieIamRole:
+    Description: Implicit IAM Role created for createMovie function
+    Value: !GetAtt CreateMoviesRole.Arn
+
+  GetMoviesApi:
+    Description: API Gateway endpoint URL for GetMoviesApi function
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/test/"
+  GetMovies:
+    Description: GetMovies Lambda Function ARN
+    Value: !GetAtt GetMovies.Arn
+  GetMoviesApiIamRole:
+    Description: Implicit IAM Role created for GetMovies function
+    Value: !GetAtt GetMoviesRole.Arn
